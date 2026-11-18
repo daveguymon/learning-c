@@ -34,7 +34,7 @@ CalcResult calculate(int first_val, char operator, int second_val) {
                     .value = 0,
                     .status = CALC_DIVISION_BY_ZERO
                 };
-            };
+            }
             return (CalcResult) {
                 .value = first_val / second_val,
                 .status = CALC_OK
@@ -44,7 +44,7 @@ CalcResult calculate(int first_val, char operator, int second_val) {
                 .value = 0,
                 .status = CALC_UNKNOWN_OPERATOR
             };
-    };
+    }
 }
 
 int main(void) {
@@ -58,12 +58,16 @@ int main(void) {
     }
 
     CalcResult result = calculate(first_val, operator, second_val);
+    
     if (result.status == CALC_OK) {
         printf("Result: %d\n", result.value);
+        return 0;
     } else if (result.status == CALC_DIVISION_BY_ZERO) {
         printf("Error: Division by zero.\n");
+        return 1;
     } else if (result.status == CALC_UNKNOWN_OPERATOR) {
         printf("Error: Unknown operator '%c'.\n", operator);
+        return 1;
     }
-    return 0;
+    return 1;
 }
