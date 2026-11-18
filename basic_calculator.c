@@ -1,19 +1,50 @@
 #include <stdio.h>
 
-int calculate(int first_val, char operator, int second_val) {
+typedef enum {
+    CALC_OK,
+    CALC_DIVISION_BY_ZERO,
+    CALC_UNKNOWN_OPERATOR
+} CalcStatus;
+
+typedef struct {
+    int value;
+    CalcStatus status;
+} CalcResult;
+
+CalcResult calculate(int first_val, char operator, int second_val) {
     switch (operator) {
         case '+':
-            return first_val + second_val;
+            return (CalcResult) {
+                .value = first_val + second_val,
+                .status = CALC_OK
+            };
         case '-':
-            return first_val - second_val;
+            return (CalcResult) {
+                .value = first_val - second_val,
+                .status = CALC_OK
+            };
         case '*':
-            return first_val * second_val;
+            return (CalcResult) {
+                .value = first_val * second_val,
+                .status = CALC_OK
+            };
         case '/':
-            return first_val / second_val;
+            if (second_val == 0) {
+                return (CalcResult) {
+                    .value = 0,
+                    .status = CALC_DIVISION_BY_ZERO
+                };
+            };
+            return (CalcResult) {
+                .value = first_val / second_val,
+                .status = CALC_OK
+            };
         default:
-            printf("Unknown operator: %c\n", operator);
-            return 0;
-    }
+            return (CalcResult) {
+                .value = 0,
+                .status = CALC_UNKNOWN_OPERATOR
+            };
+    };
 }
 
 int main(void) {
@@ -26,7 +57,13 @@ int main(void) {
         return 1;
     }
 
-    int result = calculate(first_val, operator, second_val);
-    printf("Result: %d\n", result);
+    CalcResult result = calculate(first_val, operator, second_val);
+    if (result.status == CALC_OK) {
+        printf("Result: %d\n", result.value);
+    } else if (result.status == CALC_DIVISION_BY_ZERO) {
+        printf("Error: Division by zero.\n");
+    } else if (result.status == CALC_UNKNOWN_OPERATOR) {
+        printf("Error: Unknown operator '%c'.\n", operator);
+    }
     return 0;
 }
