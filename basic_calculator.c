@@ -12,8 +12,17 @@ typedef struct {
 } CalcResult;
 
 int get_choice(char *choice) {
-    printf("Do you want to continue? (y/n): ");
-    return scanf(" %c", choice) == 1;
+    while (1) {
+      printf("Do you want to continue? (y/n): ");
+      if (scanf(" %c", choice) != 1) {
+        return 0;
+      }
+
+      if (*choice == 'y' || *choice == 'Y' || *choice == 'n' || *choice == 'N') {
+        return 1;
+      }
+      printf("Invalid choice. Please enter 'y' or 'n'.\n");
+    }
 }
 
 CalcResult calculate(int first_val, char operator, int second_val) {
