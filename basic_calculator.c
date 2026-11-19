@@ -11,6 +11,11 @@ typedef struct {
     CalcStatus status;
 } CalcResult;
 
+int get_choice(char *choice) {
+    printf("Do you want to continue? (y/n): ");
+    return scanf(" %c", choice) == 1;
+}
+
 CalcResult calculate(int first_val, char operator, int second_val) {
     switch (operator) {
         case '+':
@@ -50,24 +55,29 @@ CalcResult calculate(int first_val, char operator, int second_val) {
 int main(void) {
     int first_val, second_val;
     char operator;
-
-    printf("Enter an expression (for example, 8 + 2): ");
-    if (scanf("%d %c %d", &first_val, &operator, &second_val) != 3) {
-        printf("Invalid input.\n");
-        return 1;
-    }
-
-    CalcResult result = calculate(first_val, operator, second_val);
+    char choice;
     
-    if (result.status == CALC_OK) {
-        printf("Result: %d\n", result.value);
-        return 0;
-    } else if (result.status == CALC_DIVISION_BY_ZERO) {
-        printf("Error: Division by zero.\n");
-        return 1;
-    } else if (result.status == CALC_UNKNOWN_OPERATOR) {
-        printf("Error: Unknown operator '%c'.\n", operator);
-        return 1;
-    }
-    return 1;
+    do {
+        printf("Enter an expression (for example, 8 + 2): ");
+        if (scanf("%d %c %d", &first_val, &operator, &second_val) != 3) {
+            printf("Invalid input.\n");
+            return 1;
+        }
+
+        CalcResult result = calculate(first_val, operator, second_val);
+    
+        if (result.status == CALC_OK) {
+            printf("Result: %d\n", result.value);
+        } else if (result.status == CALC_DIVISION_BY_ZERO) {
+            printf("Error: Division by zero.\n");
+        } else if (result.status == CALC_UNKNOWN_OPERATOR) {
+            printf("Error: Unknown operator '%c'.\n", operator); 
+        }
+
+        if(!get_choice(&choice)) {
+            fprintf(stderr, "\nInput ended before you entered a choice.\n");
+            return 1;
+        }
+    } while (choice == 'y' || choice == 'Y');
+    return 0;
 }
