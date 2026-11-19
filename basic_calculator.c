@@ -1,8 +1,10 @@
 #include <stdio.h>
+#include <limits.h>
 
 typedef enum {
     CALC_OK,
     CALC_DIVISION_BY_ZERO,
+    CALC_OVERFLOW,
     CALC_UNKNOWN_OPERATOR
 } CalcStatus;
 
@@ -28,6 +30,13 @@ int get_choice(char *choice) {
 CalcResult calculate(int first_val, char operator, int second_val) {
     switch (operator) {
         case '+':
+            if ((second_val > 0 && first_val > INT_MAX - second_val) ||
+                (second_val < 0 && first_val < INT_MIN - second_val)) {
+                return (CalcResult) {
+                    .value = 0,
+                    .status = CALC_OVERFLOW
+                };
+            }
             return (CalcResult) {
                 .value = first_val + second_val,
                 .status = CALC_OK
@@ -65,7 +74,7 @@ int main(void) {
     int first_val, second_val;
     char operator;
     char choice;
-    
+
     do {
         printf("Enter an expression (for example, 8 + 2): ");
         if (scanf("%d %c %d", &first_val, &operator, &second_val) != 3) {
@@ -79,6 +88,8 @@ int main(void) {
             printf("Result: %d\n", result.value);
         } else if (result.status == CALC_DIVISION_BY_ZERO) {
             printf("Error: Division by zero.\n");
+        } else if (result.status == CALC_OVERFLOW) {
+            printf("Error: Integer overflow.\n");
         } else if (result.status == CALC_UNKNOWN_OPERATOR) {
             printf("Error: Unknown operator '%c'.\n", operator); 
         }
