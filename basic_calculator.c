@@ -42,6 +42,13 @@ CalcResult calculate(int first_val, char operator, int second_val) {
                 .status = CALC_OK
             };
         case '-':
+            if ((second_val > 0 && first_val < INT_MIN + second_val) ||
+                (second_val < 0 && first_val > INT_MAX + second_val)) {
+                return (CalcResult) {
+                    .value = 0,
+                    .status = CALC_OVERFLOW
+                };
+            }
             return (CalcResult) {
                 .value = first_val - second_val,
                 .status = CALC_OK
