@@ -21,6 +21,14 @@ typedef struct
     CalcStatus status;
 } CalcResult;
 
+typedef enum
+{
+    EXPRESSION_INPUT_OK,
+    EXPRESSION_INPUT_INVALID,
+    EXPRESSION_INPUT_EOF,
+    EXPRESSION_INPUT_ERROR
+} ExpressionInputStatus;
+
 int get_choice(char *choice)
 {
     while (1)
@@ -86,6 +94,50 @@ int parse_expression(const char *input, int *first_val, char *operator, int *sec
     return 1;
 }
 
+ExpressionInputStatus read_expression(int *first_val, char *operator, int *second_val)
+{
+    char input[INPUT_BUFFER_SIZE];
+
+    printf("Enter an expression (for example, 8 + 2): ");
+    if (fgets(input, sizeof(input), stdin) == NULL)
+    {
+        return ferror(stdin) ? EXPRESSION_INPUT_ERROR : EXPRESSION_INPUT_EOF;
+    }
+
+    char *newline = strchr(input, '\n');
+    if (newline != NULL)
+    {
+        *newline = '\0';
+    }
+    else
+    {
+        int remaining = getchar();
+        if (remaining != '\n' && remaining != EOF)
+        {
+            while (remaining != '\n' && remaining != EOF)
+            {
+                remaining = getchar();
+            }
+            if (ferror(stdin))
+            {
+                return EXPRESSION_INPUT_ERROR;
+            }
+            return EXPRESSION_INPUT_INVALID;
+        }
+        if (ferror(stdin))
+        {
+            return EXPRESSION_INPUT_ERROR;
+        }
+    }
+
+    if (!parse_expression(input, first_val, operator, second_val))
+    {
+        return EXPRESSION_INPUT_INVALID;
+    }
+
+    return EXPRESSION_INPUT_OK;
+}
+
 CalcResult calculate(int first_val, char operator, int second_val)
 {
     switch (operator)
@@ -148,82 +200,52 @@ CalcResult calculate(int first_val, char operator, int second_val)
     }
 }
 
+void display_result(CalcResult result, char operator)
+{
+    if (result.status == CALC_OK)
+    {
+        printf("Result: %d\n", result.value);
+    }
+    else if (result.status == CALC_DIVISION_BY_ZERO)
+    {
+        printf("Error: Division by zero.\n");
+    }
+    else if (result.status == CALC_OVERFLOW)
+    {
+        printf("Error: Integer overflow.\n");
+    }
+    else if (result.status == CALC_UNKNOWN_OPERATOR)
+    {
+        printf("Error: Unknown operator '%c'.\n", operator);
+    }
+}
+
 int main(void)
 {
     int first_val, second_val;
     char operator;
     char choice;
-    char input[INPUT_BUFFER_SIZE];
 
     while (1)
     {
-        printf("Enter an expression (for example, 8 + 2): ");
-        if (fgets(input, sizeof(input), stdin) == NULL)
+        ExpressionInputStatus input_status = read_expression(&first_val, &operator, &second_val);
+        switch (input_status)
         {
-            if (ferror(stdin))
-            {
-                perror("Error reading expression");
-            }
-            else
-            {
-                fprintf(stderr, "\nInput ended before you entered an expression.\n");
-            }
+        case EXPRESSION_INPUT_OK:
+            break;
+        case EXPRESSION_INPUT_INVALID:
+            printf("Invalid input.\n");
+            continue;
+        case EXPRESSION_INPUT_EOF:
+            fprintf(stderr, "\nInput ended before you entered an expression.\n");
+            return 1;
+        case EXPRESSION_INPUT_ERROR:
+            perror("Error reading expression");
             return 1;
         }
 
-        char *newline = strchr(input, '\n');
-        if (newline != NULL)
-        {
-            *newline = '\0';
-        }
-        else
-        {
-            int remaining = getchar();
-            if (remaining != '\n' && remaining != EOF)
-            {
-                while (remaining != '\n' && remaining != EOF)
-                {
-                    remaining = getchar();
-                }
-                if (ferror(stdin))
-                {
-                    perror("Error reading expression");
-                    return 1;
-                }
-                printf("Invalid input.\n");
-                continue;
-            }
-            if (ferror(stdin))
-            {
-                perror("Error reading expression");
-                return 1;
-            }
-        }
-
-        if (!parse_expression(input, &first_val, &operator, &second_val))
-        {
-            printf("Invalid input.\n");
-            continue;
-        }
-
         CalcResult result = calculate(first_val, operator, second_val);
-
-        if (result.status == CALC_OK)
-        {
-            printf("Result: %d\n", result.value);
-        }
-        else if (result.status == CALC_DIVISION_BY_ZERO)
-        {
-            printf("Error: Division by zero.\n");
-        }
-        else if (result.status == CALC_OVERFLOW)
-        {
-            printf("Error: Integer overflow.\n");
-        }
-        else if (result.status == CALC_UNKNOWN_OPERATOR)
-        {
-            printf("Error: Unknown operator '%c'.\n", operator);
-        }
+        display_result(result, operator);
 
         if (!get_choice(&choice))
         {
