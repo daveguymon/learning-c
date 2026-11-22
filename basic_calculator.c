@@ -1,5 +1,11 @@
+#include <ctype.h>
+#include <errno.h>
 #include <stdio.h>
 #include <limits.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define INPUT_BUFFER_SIZE 256
 
 typedef enum
 {
@@ -25,12 +31,59 @@ int get_choice(char *choice)
             return 0;
         }
 
+        int remaining;
+        while ((remaining = getchar()) != '\n' && remaining != EOF)
+        {
+        }
+
         if (*choice == 'y' || *choice == 'Y' || *choice == 'n' || *choice == 'N')
         {
             return 1;
         }
         printf("Invalid choice. Please enter 'y' or 'n'.\n");
     }
+}
+
+int parse_expression(const char *input, int *first_val, char *operator, int *second_val)
+{
+    char *end;
+    errno = 0;
+    long parsed_first = strtol(input, &end, 10);
+    if (end == input || errno == ERANGE || parsed_first < INT_MIN || parsed_first > INT_MAX)
+    {
+        return 0;
+    }
+
+    while (isspace((unsigned char)*end))
+    {
+        end++;
+    }
+    if (*end == '\0')
+    {
+        return 0;
+    }
+    *operator = *end++;
+
+    errno = 0;
+    char *second_start = end;
+    long parsed_second = strtol(second_start, &end, 10);
+    if (end == second_start || errno == ERANGE || parsed_second < INT_MIN || parsed_second > INT_MAX)
+    {
+        return 0;
+    }
+
+    while (isspace((unsigned char)*end))
+    {
+        end++;
+    }
+    if (*end != '\0')
+    {
+        return 0;
+    }
+
+    *first_val = (int)parsed_first;
+    *second_val = (int)parsed_second;
+    return 1;
 }
 
 CalcResult calculate(int first_val, char operator, int second_val)
@@ -100,14 +153,57 @@ int main(void)
     int first_val, second_val;
     char operator;
     char choice;
+    char input[INPUT_BUFFER_SIZE];
 
-    do
+    while (1)
     {
         printf("Enter an expression (for example, 8 + 2): ");
-        if (scanf("%d %c %d", &first_val, &operator, &second_val) != 3)
+        if (fgets(input, sizeof(input), stdin) == NULL)
+        {
+            if (ferror(stdin))
+            {
+                perror("Error reading expression");
+            }
+            else
+            {
+                fprintf(stderr, "\nInput ended before you entered an expression.\n");
+            }
+            return 1;
+        }
+
+        char *newline = strchr(input, '\n');
+        if (newline != NULL)
+        {
+            *newline = '\0';
+        }
+        else
+        {
+            int remaining = getchar();
+            if (remaining != '\n' && remaining != EOF)
+            {
+                while (remaining != '\n' && remaining != EOF)
+                {
+                    remaining = getchar();
+                }
+                if (ferror(stdin))
+                {
+                    perror("Error reading expression");
+                    return 1;
+                }
+                printf("Invalid input.\n");
+                continue;
+            }
+            if (ferror(stdin))
+            {
+                perror("Error reading expression");
+                return 1;
+            }
+        }
+
+        if (!parse_expression(input, &first_val, &operator, &second_val))
         {
             printf("Invalid input.\n");
-            return 1;
+            continue;
         }
 
         CalcResult result = calculate(first_val, operator, second_val);
@@ -134,6 +230,12 @@ int main(void)
             fprintf(stderr, "\nInput ended before you entered a choice.\n");
             return 1;
         }
-    } while (choice == 'y' || choice == 'Y');
+
+        if (choice == 'n' || choice == 'N')
+        {
+            break;
+        }
+    }
+
     return 0;
 }
