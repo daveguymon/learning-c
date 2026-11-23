@@ -6,7 +6,7 @@ APP_OBJECT := build/basic_calculator.o
 TEST_TARGET := build/test_calculator
 TEST_OBJECT := build/test_calculator.o
 
-.PHONY: build run test
+.PHONY: build run test clean
 
 build: $(TARGET)
 
@@ -35,3 +35,6 @@ run: $(TARGET)
 
 test: $(TEST_TARGET)
 	./$(TEST_TARGET)
+
+clean:
+	rm -f $(TARGET) $(TEST_TARGET) $(APP_OBJECT) $(CALCULATOR_OBJECT) $(TEST_OBJECT)
