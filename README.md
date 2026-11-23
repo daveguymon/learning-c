@@ -17,3 +17,9 @@ make run
 ```
 
 The default build uses C11 with `-Wall -Wextra -Wpedantic`.
+
+Run the automated calculator tests with:
+
+```sh
+make test
+```
