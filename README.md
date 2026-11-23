@@ -1,3 +1,11 @@
+```text
+   ______
+  / ____/___  ____ ___
+ / /   / __ \/ __ `__ \
+/ /___/ /_/ / / / / / /
+\____/\____/_/ /_/ /_/
+```
+
 # learning-c
 
 A simple C expression calculator for signed integers.
